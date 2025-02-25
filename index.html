@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Интерактивная карта подземелья (Цвет и Перемещение)</title>
     <style>
-        /* Стили CSS остаются без изменений из предыдущего ответа */
         * {
             margin: 0;
             padding: 0;
@@ -82,7 +81,7 @@
         }
 
         .color-button.active-color {
-            border-color: #000; /* Черная рамка для активного цвета */
+            border-color: #000
         }
 
         .color-button:hover {
@@ -399,7 +398,7 @@
                 }
 
                 if (this.text) {
-                    ctx.fillStyle = '#000'; // Цвет текста по умолчанию черный
+                    ctx.fillStyle = '#000';
                     ctx.font = `${Math.max(8, drawSize / 3)}px sans-serif`;
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
@@ -440,7 +439,7 @@
                     ctx.fill();
                 }
                 if (this.text) {
-                    ctx.fillStyle = '#000'; // Цвет текста по умолчанию черный
+                    ctx.fillStyle = '#000'; 
                     ctx.font = `${Math.max(8, this.size / 3)}px sans-serif`;
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
@@ -485,8 +484,8 @@
                 this.baseRows = baseRows;
                 this.baseCols = baseCols;
                 this.baseCellSize = baseCellSize;
-                this.zoomLevel = 0.5; // Изменено на 0.5 для 50% масштаба по умолчанию
-                this.cellSize = baseCellSize * this.zoomLevel; // Учитываем масштаб при расчете cellSize
+                this.zoomLevel = 0.5;
+                this.cellSize = baseCellSize * this.zoomLevel; 
                 this.cells = this.initializeCells();
                 this.isMouseDown = false;
                 this.currentMode = 'draw';
@@ -683,14 +682,14 @@
                 document.querySelectorAll('.toolbar button').forEach(btn => btn.classList.remove('active'));
                 document.getElementById(`mode${mode.charAt(0).toUpperCase() + mode.slice(1)}`).classList.add('active');
                 this.canvas.style.cursor = mode === 'pan' ? 'grab' : 'crosshair';
-                this.updateModeIndicator(); // Ensure mode indicator is updated
+                this.updateModeIndicator();
 
                 if (this.showAlert) {
                     this.showAlert(`Режим: ${mode.charAt(0).toUpperCase() + mode.slice(1)}`, 'info');
                 }
             }
 
-            updateModeIndicator() { // Added updateModeIndicator to Grid class
+            updateModeIndicator() {
                 let modeText;
                 switch (this.currentMode) {
                     case 'draw': modeText = 'Рисование'; break;
@@ -839,11 +838,11 @@
                 this.updateModeIndicator();
                 this.grid.drawCoordinates = true;
                 this.grid.draw();
-                this.updateZoomLevel(50); // Устанавливаем начальный зум 50%
+                this.updateZoomLevel(50);
             }
 
             showAlert(message, type = 'info', duration = 3000) {
-                this.grid.updateModeIndicator(); // Call this here to update mode on alerts
+                this.grid.updateModeIndicator();
                 const alert = document.createElement('div');
                 alert.className = `alert ${type}`;
                 alert.textContent = message;
@@ -1058,8 +1057,8 @@
                     }, { passive: false });
 
                     this.canvas.addEventListener('contextmenu', (e) => {
-                        e.preventDefault(); // Prevent default context menu
-                        return false; //  Still needed for some browsers to fully disable menu.
+                        e.preventDefault();
+                        return false;
                     });
 
 
