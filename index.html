@@ -5,33 +5,34 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Интерактивная карта подземелья</title>
     <style>
+        /* Стили CSS остаются без изменений */
         * {
             margin: 0;
             padding: 0;
             box-sizing: border-box;
             user-select: none;
         }
-        
+
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
             background-color: #f5f5f5;
             color: #333;
             line-height: 1.6;
         }
-        
+
         .container {
             max-width: 1200px;
             margin: 0 auto;
             padding: 20px;
         }
-        
+
         h1 {
             text-align: center;
             margin-bottom: 20px;
             color: #2c3e50;
             font-size: 2.2rem;
         }
-        
+
         .dungeon-wrapper {
             display: flex;
             justify-content: center;
@@ -42,17 +43,17 @@
             box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
             overflow: hidden;
         }
-        
+
         canvas {
             background-color: #fff;
-            cursor: pointer;
+            cursor: crosshair; /* Изменим курсор, чтобы было понятно, что можно рисовать */
         }
-        
+
         .controls {
             text-align: center;
             margin: 20px 0;
         }
-        
+
         button {
             padding: 12px 25px;
             margin: 5px;
@@ -65,32 +66,32 @@
             transition: all 0.3s ease;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
         }
-        
+
         button:hover {
             background-color: #2980b9;
             transform: translateY(-2px);
         }
-        
+
         button:active {
             transform: translateY(0);
         }
-        
+
         #saveJpg {
             background-color: #e74c3c;
         }
-        
+
         #saveJpg:hover {
             background-color: #c0392b;
         }
-        
+
         #saveXlsx {
             background-color: #27ae60;
         }
-        
+
         #saveXlsx:hover {
             background-color: #219653;
         }
-        
+
         .mode-indicator {
             display: inline-block;
             padding: 8px 16px;
@@ -100,12 +101,12 @@
             border: 1px solid #ddd;
             font-weight: bold;
         }
-        
+
         .current-mode {
             font-weight: bold;
             color: #3498db;
         }
-        
+
         .instructions {
             margin-top: 20px;
             padding: 20px;
@@ -114,14 +115,14 @@
             border-radius: 8px;
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
-        
+
         .instructions h2 {
             margin-bottom: 15px;
             color: #2c3e50;
             border-bottom: 2px solid #eee;
             padding-bottom: 10px;
         }
-        
+
         kbd {
             background-color: #f1f1f1;
             border: 1px solid #ccc;
@@ -130,14 +131,14 @@
             padding: 2px 6px;
             font-size: 0.9em;
         }
-        
+
         .alerts {
             position: fixed;
             top: 20px;
             right: 20px;
             z-index: 1000;
         }
-        
+
         .alert {
             padding: 15px 20px;
             margin-bottom: 10px;
@@ -149,36 +150,36 @@
             transform: translateX(50px);
             transition: all 0.3s ease;
         }
-        
+
         .alert.show {
             opacity: 1;
             transform: translateX(0);
         }
-        
+
         .alert.info {
             background-color: #3498db;
         }
-        
+
         .alert.success {
             background-color: #2ecc71;
         }
-        
+
         .alert.warning {
             background-color: #f39c12;
         }
-        
+
         .zoom-controls {
             display: flex;
             justify-content: center;
             margin-bottom: 10px;
         }
-        
+
         .zoom-controls button {
             padding: 8px 15px;
             margin: 0 5px;
             width: auto;
         }
-        
+
         .zoom-level {
             display: inline-block;
             padding: 8px 16px;
@@ -189,16 +190,33 @@
             min-width: 80px;
             text-align: center;
         }
-        
+
+        .text-annotation-controls {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+
+        .text-annotation-controls input[type="text"] {
+            padding: 8px;
+            margin-right: 5px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        .text-annotation-controls button {
+            padding: 8px 15px;
+        }
+
         @media (max-width: 768px) {
             .container {
                 padding: 10px;
             }
-            
+
             h1 {
                 font-size: 1.8rem;
             }
-            
+
             button {
                 padding: 10px 15px;
                 font-size: 14px;
@@ -206,14 +224,22 @@
                 margin: 5px auto;
                 display: block;
             }
-            
+
             .instructions {
                 font-size: 0.9rem;
             }
-            
-            .zoom-controls button {
+
+            .zoom-controls button, .text-annotation-controls button {
                 width: auto;
                 display: inline-block;
+            }
+            .text-annotation-controls input[type="text"] {
+                width: calc(70% - 65px); /* Adjust width for smaller screens */
+                margin-bottom: 5px; /* Add some space below input on smaller screens */
+                margin-right: 0; /* Remove right margin on smaller screens */
+                display: block; /* Make input take full width available */
+                margin-left: auto;
+                margin-right: auto;
             }
         }
     </style>
@@ -221,33 +247,45 @@
 <body>
     <div class="container">
         <h1>Интерактивная карта подземелья</h1>
-        
+
         <div class="zoom-controls">
             <button id="zoomOut">−</button>
             <div class="zoom-level" id="zoomLevel">100%</div>
             <button id="zoomIn">+</button>
         </div>
-        
+
+        <div class="text-annotation-controls">
+            <input type="text" id="annotationText" placeholder="Текст аннотации">
+            <button id="addAnnotation">Добавить текст</button>
+        </div>
+
         <div class="dungeon-wrapper">
             <canvas id="dungeonCanvas"></canvas>
         </div>
-        
+
         <div class="controls">
             <div class="mode-indicator">
                 Режим: <span id="currentMode" class="current-mode">Рисование</span>
             </div>
+            <button id="centerMap">Центрировать карту</button>
+            <button id="saveMap">Сохранить карту</button>
+            <button id="loadMap">Загрузить карту</button>
             <button id="saveJpg">Сохранить как JPG</button>
             <button id="saveXlsx">Сохранить как XLSX</button>
             <button id="resetMap">Сбросить карту</button>
         </div>
-        
+
         <div class="instructions">
             <h2>Как работать с картой</h2>
             <p><strong>XLSX не работает!</strong></p>
             <p><strong>Закрашивание ячеек:</strong> Кликните левой кнопкой мыши на ячейку, чтобы закрасить её. Удерживайте левую кнопку мыши и перемещайте курсор, чтобы закрашивать несколько ячеек подряд.</p>
             <p><strong>Удаление закрашивания:</strong> Удерживайте клавишу <kbd>Shift</kbd> и кликайте на закрашенные ячейки, чтобы удалить закрашивание. Или удерживайте <kbd>Shift</kbd> и перемещайте курсор с зажатой левой кнопкой мыши для удаления сразу нескольких ячеек.</p>
+            <p><strong>Перемещение карты:</strong> Удерживайте правую кнопку мыши и перемещайте курсор, чтобы перемещать карту.</p>
+            <p><strong>Центрирование карты:</strong> Нажмите кнопку "Центрировать карту", чтобы сбросить масштаб до 100% и переместить карту в центральное положение.</p>
             <p><strong>Добавление объектов:</strong> Нажмите <kbd>O</kbd>, чтобы включить режим добавления объектов. Кликните на ячейку, чтобы добавить объект (красную метку). Нажмите <kbd>Esc</kbd>, чтобы выйти из этого режима.</p>
+            <p><strong>Добавление текста:</strong> Введите текст в поле ввода и нажмите кнопку "Добавить текст". Затем кликните на ячейку, чтобы добавить текст к ней.</p>
             <p><strong>Изменение масштаба:</strong> Используйте кнопки + и - над картой для увеличения или уменьшения масштаба. Также можно использовать клавиши <kbd>+</kbd> и <kbd>-</kbd>.</p>
+            <p><strong>Сохранение и загрузка карты:</strong> Используйте кнопки "Сохранить карту" и "Загрузить карту" для сохранения и загрузки состояния карты в файл JSON.</p>
             <p><strong>Горячие клавиши:</strong></p>
             <ul>
                 <li><kbd>Shift</kbd> + клик: Удалить закрашивание ячейки.</li>
@@ -261,34 +299,62 @@
     </div>
 
     <div class="alerts" id="alerts"></div>
+    <input type="file" id="fileInput" style="display: none;">
 
     <script src="https://cdn.jsdelivr.net/npm/xlsx/dist/xlsx.full.min.js"></script>
     <script>
         class Cell {
-            constructor(x, y, size) {
+            constructor(x, y, size, row, col) {
                 this.x = x;
                 this.y = y;
                 this.size = size;
                 this.isFilled = false;
                 this.hasObject = false;
+                this.text = null;
+                this.row = row;
+                this.col = col;
             }
 
-            draw(ctx) {
+            draw(ctx, drawGridLines, drawCoordinates, panX, panY, zoomLevel) {
+                const drawX = this.x * zoomLevel + panX;
+                const drawY = this.y * zoomLevel + panY;
+                const drawSize = this.size * zoomLevel;
+
                 if (this.isFilled) {
                     ctx.fillStyle = '#2c3e50';
-                    ctx.fillRect(this.x, this.y, this.size, this.size);
+                    ctx.fillRect(drawX, drawY, drawSize, drawSize);
                 }
+
                 if (this.hasObject) {
                     ctx.fillStyle = '#e74c3c';
                     ctx.beginPath();
-                    ctx.arc(this.x + this.size / 2, this.y + this.size / 2, this.size / 3, 0, 2 * Math.PI);
+                    ctx.arc(drawX + drawSize / 2, drawY + drawSize / 2, drawSize / 3, 0, 2 * Math.PI);
                     ctx.fill();
                 }
-                ctx.strokeStyle = '#ddd';
-                ctx.strokeRect(this.x, this.y, this.size, this.size);
+
+                if (this.text) {
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = `${Math.max(8, drawSize / 3)}px sans-serif`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(this.text, drawX + drawSize / 2, drawY + drawSize / 2);
+                }
+
+                if (drawGridLines) {
+                    ctx.strokeStyle = '#ddd';
+                    ctx.strokeRect(drawX, drawY, drawSize, drawSize);
+                }
+
+                if (drawCoordinates) {
+                    ctx.fillStyle = '#999';
+                    ctx.font = `${Math.max(6, 8 * zoomLevel)}px sans-serif`;
+                    ctx.textAlign = 'left';
+                    ctx.textBaseline = 'top';
+                    ctx.fillText(`${this.col},${this.row}`, drawX + 2, drawY + 2);
+                }
             }
 
-            // Для чистого рендеринга JPG (без сетки)
+
             drawForExport(ctx) {
                 if (this.isFilled) {
                     ctx.fillStyle = '#2c3e50';
@@ -297,12 +363,19 @@
                     ctx.fillStyle = '#ffffff';
                     ctx.fillRect(this.x, this.y, this.size, this.size);
                 }
-                
+
                 if (this.hasObject) {
                     ctx.fillStyle = '#e74c3c';
                     ctx.beginPath();
                     ctx.arc(this.x + this.size / 2, this.y + this.size / 2, this.size / 3, 0, 2 * Math.PI);
                     ctx.fill();
+                }
+                if (this.text) {
+                    ctx.fillStyle = '#ffffff';
+                    ctx.font = `${Math.max(8, this.size / 3)}px sans-serif`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(this.text, this.x + this.size / 2, this.y + this.size / 2);
                 }
             }
 
@@ -314,54 +387,68 @@
                 this.hasObject = hasObject;
             }
 
-            containsPoint(px, py) {
-                return px >= this.x && px < this.x + this.size && 
-                       py >= this.y && py < this.y + this.size;
+            setText(text) {
+                this.text = text;
+            }
+
+            containsPoint(px, py, panX, panY, zoomLevel) {
+                const drawSize = this.size * zoomLevel;
+                const drawX = this.x * zoomLevel + panX;
+                const drawY = this.y * zoomLevel + panY;
+                return px >= drawX && px < drawX + drawSize &&
+                       py >= drawY && py < drawY + drawSize;
             }
         }
 
         class Grid {
-            constructor(canvas, rows, cols, cellSize) {
+            constructor(canvas, baseRows = 100, baseCols = 100, baseCellSize = 20) {
                 this.canvas = canvas;
                 this.ctx = canvas.getContext('2d');
-                this.baseRows = rows;
-                this.baseCols = cols;
-                this.baseCellSize = cellSize;
+                this.baseRows = baseRows;
+                this.baseCols = baseCols;
+                this.baseCellSize = baseCellSize;
                 this.zoomLevel = 1;
-                this.rows = rows;
-                this.cols = cols;
-                this.cellSize = cellSize;
+                this.cellSize = baseCellSize;
                 this.cells = this.initializeCells();
                 this.isMouseDown = false;
                 this.isShiftPressed = false;
                 this.isObjectMode = false;
+                this.isTextAnnotationMode = false;
+                this.annotationText = null;
                 this.showAlert = null;
+                this.drawGridLines = true;
+                this.drawCoordinates = true;
+                this.panX = 0;
+                this.panY = 0;
+                this.isPanning = false;
+                this.panStartX = 0;
+                this.panStartY = 0;
                 this.setupCanvas();
             }
 
             setupCanvas() {
-                const canvasWidth = this.cols * this.cellSize;
-                const canvasHeight = this.rows * this.cellSize;
-                
+                const canvasWidth = this.baseCols * this.baseCellSize * this.zoomLevel;
+                const canvasHeight = this.baseRows * this.baseCellSize * this.zoomLevel;
+
                 this.canvas.width = canvasWidth;
                 this.canvas.height = canvasHeight;
-                
+
                 const dpr = window.devicePixelRatio || 1;
-                
+
                 this.canvas.width = canvasWidth * dpr;
                 this.canvas.height = canvasHeight * dpr;
                 this.ctx.scale(dpr, dpr);
-                
+
                 this.canvas.style.width = `${canvasWidth}px`;
                 this.canvas.style.height = `${canvasHeight}px`;
             }
 
             initializeCells() {
                 const cells = [];
-                for (let i = 0; i < this.rows; i++) {
+                for (let i = 0; i < this.baseRows; i++) {
                     const row = [];
-                    for (let j = 0; j < this.cols; j++) {
-                        row.push(new Cell(j * this.cellSize, i * this.cellSize, this.cellSize));
+                    for (let j = 0; j < this.baseCols; j++) {
+                        row.push(new Cell(j * this.baseCellSize, i * this.baseCellSize, this.baseCellSize, i, j));
                     }
                     cells.push(row);
                 }
@@ -370,69 +457,118 @@
 
             draw() {
                 this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
-                for (let i = 0; i < this.rows; i++) {
-                    for (let j = 0; j < this.cols; j++) {
-                        this.cells[i][j].draw(this.ctx);
+
+                if (this.drawCoordinates) {
+                    this.drawAxisCoordinates();
+                }
+
+                for (let i = 0; i < this.baseRows; i++) {
+                    for (let j = 0; j < this.baseCols; j++) {
+                        this.cells[i][j].draw(this.ctx, this.drawGridLines, false, this.panX, this.panY, this.zoomLevel);
                     }
                 }
             }
 
-            // Метод для создания чистого изображения карты для экспорта в JPG
+            drawAxisCoordinates() {
+                this.ctx.fillStyle = '#666';
+                this.ctx.font = '10px sans-serif';
+                this.ctx.textAlign = 'center';
+                this.ctx.textBaseline = 'bottom';
+
+                for (let j = 0; j < this.baseCols; j++) {
+                    const xPos = j * this.baseCellSize * this.zoomLevel + this.baseCellSize * this.zoomLevel / 2 + this.panX;
+                    const yPos = 10 + this.panY;
+                    if (yPos > 0 && yPos < this.canvas.height) {
+                        this.ctx.fillText(j + 1, xPos, yPos);
+                    }
+                }
+
+                this.ctx.textAlign = 'right';
+                this.ctx.textBaseline = 'middle';
+                for (let i = 0; i < this.baseRows; i++) {
+                    const xPos = 20 + this.panX;
+                    const yPos = i * this.baseCellSize * this.zoomLevel + this.baseCellSize * this.zoomLevel / 2 + this.panY;
+                    if (xPos > 0 && xPos < this.canvas.width) {
+                        this.ctx.fillText(i + 1, xPos, yPos);
+                    }
+                }
+            }
+
+
             createExportImage() {
                 const exportCanvas = document.createElement('canvas');
                 const exportCtx = exportCanvas.getContext('2d');
-                
-                exportCanvas.width = this.cols * this.cellSize;
-                exportCanvas.height = this.rows * this.cellSize;
-                
-                // Фон
+
+                exportCanvas.width = this.baseCols * this.baseCellSize;
+                exportCanvas.height = this.baseRows * this.baseCellSize;
+
                 exportCtx.fillStyle = '#ffffff';
                 exportCtx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
-                
-                // Отрисовка ячеек без сетки
-                for (let i = 0; i < this.rows; i++) {
-                    for (let j = 0; j < this.cols; j++) {
+
+                for (let i = 0; i < this.baseRows; i++) {
+                    for (let j = 0; j < this.baseCols; j++) {
                         this.cells[i][j].drawForExport(exportCtx);
                     }
                 }
-                
+
                 return exportCanvas;
             }
 
-            handleMouseDown(x, y, shiftKey) {
-                this.isMouseDown = true;
-                this.isShiftPressed = shiftKey;
-                this.handleInteraction(x, y);
-            }
-
-            handleMouseMove(x, y) {
-                if (this.isMouseDown) {
+            handleMouseDown(x, y, shiftKey, button) {
+                if (button === 2) {
+                    this.isPanning = true;
+                    this.panStartX = x;
+                    this.panStartY = y;
+                    this.canvas.style.cursor = 'grab';
+                } else {
+                    this.isMouseDown = true;
+                    this.isShiftPressed = shiftKey;
                     this.handleInteraction(x, y);
                 }
             }
 
-            handleMouseUp() {
-                this.isMouseDown = false;
+            handleMouseMove(x, y) {
+                if (this.isPanning) {
+                    const dx = x - this.panStartX;
+                    const dy = y - this.panStartY;
+                    this.panX += dx;
+                    this.panY += dy;
+                    this.panStartX = x;
+                    this.panStartY = y;
+                    this.draw();
+                } else if (this.isMouseDown) {
+                    this.handleInteraction(x, y);
+                }
             }
+
+            handleMouseUp(button) {
+                if (button === 2) {
+                    this.isPanning = false;
+                    this.canvas.style.cursor = 'crosshair';
+                } else {
+                    this.isMouseDown = false;
+                }
+            }
+
 
             handleInteraction(x, y) {
                 try {
                     const rect = this.canvas.getBoundingClientRect();
                     const scaleX = this.canvas.width / rect.width;
                     const scaleY = this.canvas.height / rect.height;
-                    
+
                     const clickX = (x - rect.left) * scaleX / (window.devicePixelRatio || 1);
                     const clickY = (y - rect.top) * scaleY / (window.devicePixelRatio || 1);
-                    
+
                     if (clickX < 0 || clickY < 0 || clickX > this.canvas.width || clickY > this.canvas.height) {
                         return;
                     }
-                    
+
                     let cellFound = false;
-                    
-                    for (let i = 0; i < this.rows; i++) {
-                        for (let j = 0; j < this.cols; j++) {
-                            if (this.cells[i][j].containsPoint(clickX, clickY)) {
+
+                    for (let i = 0; i < this.baseRows; i++) {
+                        for (let j = 0; j < this.baseCols; j++) {
+                            if (this.cells[i][j].containsPoint(clickX, clickY, this.panX, this.panY, this.zoomLevel)) {
                                 cellFound = true;
                                 if (this.isObjectMode) {
                                     const hadObject = this.cells[i][j].hasObject;
@@ -442,9 +578,17 @@
                                     } else if (hadObject && this.showAlert) {
                                         this.showAlert('Объект удален', 'info');
                                     }
+                                } else if (this.isTextAnnotationMode && this.annotationText) {
+                                    this.cells[i][j].setText(this.annotationText);
+                                    this.isTextAnnotationMode = false;
+                                    this.annotationText = null;
+                                    if (this.showAlert) {
+                                        this.showAlert('Текст добавлен', 'success');
+                                    }
                                 } else if (this.isShiftPressed) {
                                     const wasFilled = this.cells[i][j].isFilled;
                                     this.cells[i][j].isFilled = false;
+                                    this.cells[i][j].setText(null);
                                     if (wasFilled && this.showAlert) {
                                         this.showAlert('Ячейка очищена', 'info');
                                     }
@@ -460,7 +604,7 @@
                         }
                         if (cellFound) break;
                     }
-                    
+
                     this.draw();
                 } catch (err) {
                     console.error('Ошибка при взаимодействии с картой:', err);
@@ -472,6 +616,7 @@
 
             toggleObjectMode() {
                 this.isObjectMode = !this.isObjectMode;
+                this.isTextAnnotationMode = false;
                 if (this.showAlert) {
                     if (this.isObjectMode) {
                         this.showAlert('Режим добавления объектов активирован', 'info');
@@ -482,98 +627,143 @@
                 return this.isObjectMode;
             }
 
+            enableTextAnnotationMode(text) {
+                this.isTextAnnotationMode = true;
+                this.isObjectMode = false;
+                this.annotationText = text;
+                if (this.showAlert) {
+                    this.showAlert('Режим добавления текста активирован', 'info');
+                }
+            }
+
+
             reset() {
                 this.cells = this.initializeCells();
+                this.panX = 0;
+                this.panY = 0;
+                this.zoomLevel = 1;
+                this.cellSize = this.baseCellSize;
+                this.setupCanvas();
                 this.draw();
                 if (this.showAlert) {
                     this.showAlert('Карта сброшена', 'success');
                 }
             }
 
-            // Улучшенный метод для получения данных для XLSX
+            centerView() {
+                this.zoomLevel = 1;
+                this.cellSize = this.baseCellSize;
+                this.panX = this.canvas.width / 2 - (this.baseCols * this.baseCellSize) / 2;
+                this.panY = this.canvas.height / 2 - (this.baseRows * this.baseCellSize) / 2;
+                this.setupCanvas();
+                this.draw();
+            }
+
+
             toArray() {
-                return this.cells.map(row => 
+                return this.cells.map(row =>
                     row.map(cell => {
-                        if (cell.hasObject && cell.isFilled) return 'XO'; // Заполнена и с объектом
-                        if (cell.hasObject) return 'O';  // Только объект
-                        if (cell.isFilled) return 'X';   // Только заполнена
-                        return '';  // Пустая ячейка
+                        let cellCode = '';
+                        if (cell.isFilled) cellCode += 'F';
+                        if (cell.hasObject) cellCode += 'O';
+                        if (cell.text) cellCode += 'T';
+                        return cellCode;
                     })
                 );
             }
-            
-            // Новый метод для получения бинарных данных для XLSX (1 и 0)
+
             toBinaryArray() {
-                return this.cells.map(row => 
+                return this.cells.map(row =>
                     row.map(cell => cell.isFilled ? 1 : 0)
                 );
             }
-            
-            // Новый метод для получения данных об объектах для XLSX
+
             toObjectsArray() {
-                return this.cells.map(row => 
+                return this.cells.map(row =>
                     row.map(cell => cell.hasObject ? 1 : 0)
                 );
             }
-            
-            setZoom(level) {
-                if (level < 0.5) level = 0.5;
-                if (level > 2) level = 2;
-                
-                this.zoomLevel = level;
-                
-                const oldCellData = this.cells.map(row => row.map(cell => ({
+
+            getState() {
+                return this.cells.map(row => row.map(cell => ({
                     isFilled: cell.isFilled,
-                    hasObject: cell.hasObject
+                    hasObject: cell.hasObject,
+                    text: cell.text
                 })));
-                
-                this.cellSize = this.baseCellSize * this.zoomLevel;
-                this.rows = Math.floor(this.baseRows / this.zoomLevel);
-                this.cols = Math.floor(this.baseCols / this.zoomLevel);
-                
-                this.cells = this.initializeCells();
-                
-                const minRows = Math.min(this.rows, oldCellData.length);
-                const minCols = Math.min(this.cols, oldCellData[0].length);
-                
-                for (let i = 0; i < minRows; i++) {
-                    for (let j = 0; j < minCols; j++) {
-                        this.cells[i][j].isFilled = oldCellData[i][j].isFilled;
-                        this.cells[i][j].hasObject = oldCellData[i][j].hasObject;
+            }
+
+            loadState(state) {
+                if (!state) return;
+                const rows = Math.min(state.length, this.baseRows);
+                const cols = Math.min(state[0].length, this.baseCols);
+
+                for (let i = 0; i < rows; i++) {
+                    for (let j = 0; j < cols; j++) {
+                        this.cells[i][j].isFilled = state[i][j].isFilled;
+                        this.cells[i][j].hasObject = state[i][j].hasObject;
+                        this.cells[i][j].text = state[i][j].text;
                     }
                 }
-                
-                this.setupCanvas();
                 this.draw();
-                
+            }
+
+
+            setZoom(level) {
+                if (level < 0.1) level = 0.1;
+                if (level > 4) level = 4;
+
+                const previousZoomLevel = this.zoomLevel;
+                this.zoomLevel = level;
+                this.cellSize = this.baseCellSize * level;
+
+                // Calculate canvas center in world coordinates *before* zoom
+                const centerXBeforeZoom = (this.canvas.width / 2 - this.panX) / previousZoomLevel;
+                const centerYBeforeZoom = (this.canvas.height / 2 - this.panY) / previousZoomLevel;
+
+                this.setupCanvas(); // Setup canvas *after* changing zoom level and cell size
+
+                // Calculate canvas center in world coordinates *after* zoom
+                const centerXAfterZoom = centerXBeforeZoom; // Center should remain the same in world coords
+                const centerYAfterZoom = centerYBeforeZoom;
+
+                // Calculate required pan adjustment to keep center fixed
+                this.panX = this.canvas.width / 2 - centerXAfterZoom * this.zoomLevel;
+                this.panY = this.canvas.height / 2 - centerYAfterZoom * this.zoomLevel;
+
+
+                this.draw();
                 return Math.round(level * 100);
             }
-            
+
+
             zoomIn() {
                 return this.setZoom(this.zoomLevel + 0.1);
             }
-            
+
             zoomOut() {
                 return this.setZoom(this.zoomLevel - 0.1);
             }
         }
 
         class DungeonMap {
-            constructor(canvasId, rows = 50, cols = 50, cellSize = 20) {
+            constructor(canvasId, rows = 100, cols = 100, cellSize = 20) {
                 this.canvas = document.getElementById(canvasId);
                 if (!this.canvas) {
                     console.error('Canvas not found:', canvasId);
                     return;
                 }
-                
+
                 this.grid = new Grid(this.canvas, rows, cols, cellSize);
                 this.currentModeElement = document.getElementById('currentMode');
                 this.alertsContainer = document.getElementById('alerts');
                 this.zoomLevelElement = document.getElementById('zoomLevel');
-                
+                this.annotationTextInput = document.getElementById('annotationText');
+                this.fileInput = document.getElementById('fileInput');
+
                 this.grid.showAlert = this.showAlert.bind(this);
-                
+
                 this.initializeEventListeners();
+                this.grid.drawCoordinates = true;
                 this.grid.draw();
             }
 
@@ -581,13 +771,13 @@
                 const alert = document.createElement('div');
                 alert.className = `alert ${type}`;
                 alert.textContent = message;
-                
+
                 this.alertsContainer.appendChild(alert);
-                
+
                 void alert.offsetWidth;
-                
+
                 alert.classList.add('show');
-                
+
                 setTimeout(() => {
                     alert.classList.remove('show');
                     setTimeout(() => {
@@ -598,35 +788,87 @@
 
             updateModeIndicator() {
                 if (this.currentModeElement) {
-                    this.currentModeElement.textContent = this.grid.isObjectMode ? 'Добавление объектов' : 'Рисование';
+                    let modeText = 'Рисование';
+                    if (this.grid.isObjectMode) {
+                        modeText = 'Добавление объектов';
+                    } else if (this.grid.isTextAnnotationMode) {
+                        modeText = 'Добавление текста';
+                    }
+                    this.currentModeElement.textContent = modeText;
                 }
             }
-            
+
             updateZoomLevel(level) {
                 if (this.zoomLevelElement) {
                     this.zoomLevelElement.textContent = `${level}%`;
                 }
             }
 
+            saveMap() {
+                try {
+                    const mapState = this.grid.getState();
+                    const jsonString = JSON.stringify(mapState);
+                    const blob = new Blob([jsonString], { type: 'application/json' });
+                    const url = URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'dungeon_map_state.json';
+                    a.click();
+                    URL.revokeObjectURL(url);
+                    this.showAlert('Карта сохранена', 'success');
+                } catch (error) {
+                    console.error('Ошибка при сохранении карты:', error);
+                    this.showAlert('Ошибка при сохранении карты', 'warning');
+                }
+            }
+
+            loadMap() {
+                this.fileInput.click();
+            }
+
+            handleFileLoad(event) {
+                const file = event.target.files[0];
+                if (!file) {
+                    this.showAlert('Файл не выбран', 'warning');
+                    return;
+                }
+
+                const reader = new FileReader();
+                reader.onload = (e) => {
+                    try {
+                        const mapState = JSON.parse(e.target.result);
+                        this.grid.loadState(mapState);
+                        this.showAlert('Карта загружена', 'success');
+                    } catch (error) {
+                        console.error('Ошибка при загрузке карты:', error);
+                        this.showAlert('Ошибка при загрузке карты: неверный формат файла', 'warning');
+                    }
+                };
+                reader.readAsText(file);
+                event.target.value = '';
+            }
+
+
             initializeEventListeners() {
                 try {
                     this.canvas.addEventListener('mousedown', (e) => {
                         e.preventDefault();
-                        this.grid.handleMouseDown(e.clientX, e.clientY, e.shiftKey);
+                        this.canvas.focus();
+                        this.grid.handleMouseDown(e.clientX, e.clientY, e.shiftKey, e.button);
                     });
 
                     this.canvas.addEventListener('mousemove', (e) => {
                         this.grid.handleMouseMove(e.clientX, e.clientY);
                     });
 
-                    this.canvas.addEventListener('mouseup', () => {
-                        this.grid.handleMouseUp();
+                    this.canvas.addEventListener('mouseup', (e) => {
+                        this.grid.handleMouseUp(e.button);
                     });
-                    
+
                     this.canvas.addEventListener('touchstart', (e) => {
                         e.preventDefault();
                         const touch = e.touches[0];
-                        this.grid.handleMouseDown(touch.clientX, touch.clientY, false);
+                        this.grid.handleMouseDown(touch.clientX, touch.clientY, false, 0);
                     });
 
                     this.canvas.addEventListener('touchmove', (e) => {
@@ -635,34 +877,37 @@
                     });
 
                     this.canvas.addEventListener('touchend', () => {
-                        this.grid.handleMouseUp();
+                        this.grid.handleMouseUp(0);
                     });
 
                     document.addEventListener('keydown', (e) => {
-                        if (e.key === 'o' || e.key === 'O' || e.key === 'о' || e.key === 'О') {
-                            const isObjectMode = this.grid.toggleObjectMode();
-                            this.updateModeIndicator();
-                        } else if (e.key === 'Escape') {
-                            if (this.grid.isObjectMode) {
-                                this.grid.isObjectMode = false;
+                        if (e.target !== this.annotationTextInput) {
+                            if (e.key === 'o' || e.key === 'O' || e.key === 'о' || e.key === 'О') {
+                                const isObjectMode = this.grid.toggleObjectMode();
                                 this.updateModeIndicator();
-                                this.showAlert('Режим рисования активирован', 'info');
+                            } else if (e.key === 'Escape') {
+                                if (this.grid.isObjectMode || this.grid.isTextAnnotationMode) {
+                                    this.grid.isObjectMode = false;
+                                    this.grid.isTextAnnotationMode = false;
+                                    this.updateModeIndicator();
+                                    this.showAlert('Режим рисования активирован', 'info');
+                                }
+                            } else if (e.key === 'r' || e.key === 'R' || e.key === 'к' || e.key === 'К') {
+                                this.grid.reset();
+                            } else if (e.key === 'Shift') {
+                                this.grid.isShiftPressed = true;
+                            } else if (e.key === '+' || e.key === '=') {
+                                const level = this.grid.zoomIn();
+                                this.updateZoomLevel(level);
+                                this.showAlert(`Масштаб: ${level}%`, 'info');
+                            } else if (e.key === '-' || e.key === '_') {
+                                const level = this.grid.zoomOut();
+                                this.updateZoomLevel(level);
+                                this.showAlert(`Масштаб: ${level}%`, 'info');
                             }
-                        } else if (e.key === 'r' || e.key === 'R' || e.key === 'к' || e.key === 'К') {
-                            this.grid.reset();
-                        } else if (e.key === 'Shift') {
-                            this.grid.isShiftPressed = true;
-                        } else if (e.key === '+' || e.key === '=') {
-                            const level = this.grid.zoomIn();
-                            this.updateZoomLevel(level);
-                            this.showAlert(`Масштаб: ${level}%`, 'info');
-                        } else if (e.key === '-' || e.key === '_') {
-                            const level = this.grid.zoomOut();
-                            this.updateZoomLevel(level);
-                            this.showAlert(`Масштаб: ${level}%`, 'info');
                         }
                     });
-                    
+
                     document.addEventListener('keyup', (e) => {
                         if (e.key === 'Shift') {
                             this.grid.isShiftPressed = false;
@@ -672,21 +917,19 @@
                     window.addEventListener('blur', () => {
                         this.grid.isMouseDown = false;
                         this.grid.isShiftPressed = false;
+                        this.grid.isPanning = false;
+                        this.canvas.style.cursor = 'crosshair';
                     });
 
-                    // Улучшенное сохранение в JPG
                     document.getElementById('saveJpg').addEventListener('click', () => {
                         try {
-                            // Создаем чистое изображение без сетки
                             const exportCanvas = this.grid.createExportImage();
-                            
-                            // Получаем данные и скачиваем
                             const dataURL = exportCanvas.toDataURL('image/jpeg', 0.95);
                             const link = document.createElement('a');
                             link.href = dataURL;
                             link.download = 'dungeon_map.jpg';
                             link.click();
-                            
+
                             this.showAlert('Карта сохранена как JPG', 'success');
                         } catch (err) {
                             console.error('Error saving as JPG:', err);
@@ -694,26 +937,22 @@
                         }
                     });
 
-                    // Улучшенное сохранение в XLSX
                     document.getElementById('saveXlsx').addEventListener('click', () => {
                         try {
                             const wb = XLSX.utils.book_new();
-                            
-                            // Создаем первый лист с общей информацией
+
                             const mainData = this.grid.toArray();
                             const wsMain = XLSX.utils.aoa_to_sheet(mainData);
                             XLSX.utils.book_append_sheet(wb, wsMain, 'Карта');
-                            
-                            // Создаем второй лист с бинарной информацией (заполненные ячейки)
+
                             const binaryData = this.grid.toBinaryArray();
                             const wsBinary = XLSX.utils.aoa_to_sheet(binaryData);
                             XLSX.utils.book_append_sheet(wb, wsBinary, 'Заполненные ячейки');
-                            
-                            // Создаем третий лист с информацией об объектах
+
                             const objectsData = this.grid.toObjectsArray();
                             const wsObjects = XLSX.utils.aoa_to_sheet(objectsData);
                             XLSX.utils.book_append_sheet(wb, wsObjects, 'Объекты');
-                            
+
                             XLSX.writeFile(wb, 'dungeon_map.xlsx');
                             this.showAlert('Карта сохранена как XLSX', 'success');
                         } catch (err) {
@@ -721,23 +960,30 @@
                             this.showAlert('Ошибка при сохранении XLSX', 'warning');
                         }
                     });
-                    
+
                     document.getElementById('resetMap').addEventListener('click', () => {
                         this.grid.reset();
                     });
-                    
+
+                    document.getElementById('centerMap').addEventListener('click', () => {
+                        this.grid.centerView();
+                        this.updateZoomLevel(100);
+                        this.showAlert('Карта центрирована', 'info');
+                    });
+
+
                     document.getElementById('zoomIn').addEventListener('click', () => {
                         const level = this.grid.zoomIn();
                         this.updateZoomLevel(level);
                         this.showAlert(`Масштаб: ${level}%`, 'info');
                     });
-                    
+
                     document.getElementById('zoomOut').addEventListener('click', () => {
                         const level = this.grid.zoomOut();
                         this.updateZoomLevel(level);
                         this.showAlert(`Масштаб: ${level}%`, 'info');
                     });
-                    
+
                     this.canvas.addEventListener('wheel', (e) => {
                         e.preventDefault();
                         if (e.deltaY < 0) {
@@ -748,16 +994,40 @@
                             this.updateZoomLevel(level);
                         }
                     }, { passive: false });
-                    
+
                     this.canvas.addEventListener('contextmenu', (e) => {
                         e.preventDefault();
                         return false;
                     });
-                    
+
                     window.addEventListener('resize', () => {
                         this.grid.setupCanvas();
                         this.grid.draw();
                     });
+
+                    document.getElementById('addAnnotation').addEventListener('click', () => {
+                        const text = this.annotationTextInput.value;
+                        if (text) {
+                            this.grid.enableTextAnnotationMode(text);
+                            this.updateModeIndicator();
+                        } else {
+                            this.showAlert('Введите текст аннотации', 'warning');
+                        }
+                    });
+
+                    document.getElementById('saveMap').addEventListener('click', () => {
+                        this.saveMap();
+                    });
+
+                    document.getElementById('loadMap').addEventListener('click', () => {
+                        this.loadMap();
+                    });
+
+                    this.fileInput.addEventListener('change', (e) => {
+                        this.handleFileLoad(e);
+                    });
+
+
                 } catch (err) {
                     console.error('Error initializing event listeners:', err);
                     this.showAlert('Ошибка при инициализации приложения', 'warning');
@@ -775,3 +1045,4 @@
         }
     </script>
 </body>
+</html>
