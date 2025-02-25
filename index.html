@@ -243,6 +243,7 @@
         
         <div class="instructions">
             <h2>Как работать с картой</h2>
+            <p><strong>XLSX не работает!</strong></p>
             <p><strong>Закрашивание ячеек:</strong> Кликните левой кнопкой мыши на ячейку, чтобы закрасить её. Удерживайте левую кнопку мыши и перемещайте курсор, чтобы закрашивать несколько ячеек подряд.</p>
             <p><strong>Удаление закрашивания:</strong> Удерживайте клавишу <kbd>Shift</kbd> и кликайте на закрашенные ячейки, чтобы удалить закрашивание. Или удерживайте <kbd>Shift</kbd> и перемещайте курсор с зажатой левой кнопкой мыши для удаления сразу нескольких ячеек.</p>
             <p><strong>Добавление объектов:</strong> Нажмите <kbd>O</kbd>, чтобы включить режим добавления объектов. Кликните на ячейку, чтобы добавить объект (красную метку). Нажмите <kbd>Esc</kbd>, чтобы выйти из этого режима.</p>
@@ -285,6 +286,24 @@
                 }
                 ctx.strokeStyle = '#ddd';
                 ctx.strokeRect(this.x, this.y, this.size, this.size);
+            }
+
+            // Для чистого рендеринга JPG (без сетки)
+            drawForExport(ctx) {
+                if (this.isFilled) {
+                    ctx.fillStyle = '#2c3e50';
+                    ctx.fillRect(this.x, this.y, this.size, this.size);
+                } else {
+                    ctx.fillStyle = '#ffffff';
+                    ctx.fillRect(this.x, this.y, this.size, this.size);
+                }
+                
+                if (this.hasObject) {
+                    ctx.fillStyle = '#e74c3c';
+                    ctx.beginPath();
+                    ctx.arc(this.x + this.size / 2, this.y + this.size / 2, this.size / 3, 0, 2 * Math.PI);
+                    ctx.fill();
+                }
             }
 
             toggleFill() {
@@ -356,6 +375,28 @@
                         this.cells[i][j].draw(this.ctx);
                     }
                 }
+            }
+
+            // Метод для создания чистого изображения карты для экспорта в JPG
+            createExportImage() {
+                const exportCanvas = document.createElement('canvas');
+                const exportCtx = exportCanvas.getContext('2d');
+                
+                exportCanvas.width = this.cols * this.cellSize;
+                exportCanvas.height = this.rows * this.cellSize;
+                
+                // Фон
+                exportCtx.fillStyle = '#ffffff';
+                exportCtx.fillRect(0, 0, exportCanvas.width, exportCanvas.height);
+                
+                // Отрисовка ячеек без сетки
+                for (let i = 0; i < this.rows; i++) {
+                    for (let j = 0; j < this.cols; j++) {
+                        this.cells[i][j].drawForExport(exportCtx);
+                    }
+                }
+                
+                return exportCanvas;
             }
 
             handleMouseDown(x, y, shiftKey) {
@@ -449,12 +490,30 @@
                 }
             }
 
+            // Улучшенный метод для получения данных для XLSX
             toArray() {
-                return this.cells.map(row => row.map(cell => {
-                    if (cell.hasObject) return 'O';
-                    if (cell.isFilled) return 'X';
-                    return '';
-                }));
+                return this.cells.map(row => 
+                    row.map(cell => {
+                        if (cell.hasObject && cell.isFilled) return 'XO'; // Заполнена и с объектом
+                        if (cell.hasObject) return 'O';  // Только объект
+                        if (cell.isFilled) return 'X';   // Только заполнена
+                        return '';  // Пустая ячейка
+                    })
+                );
+            }
+            
+            // Новый метод для получения бинарных данных для XLSX (1 и 0)
+            toBinaryArray() {
+                return this.cells.map(row => 
+                    row.map(cell => cell.isFilled ? 1 : 0)
+                );
+            }
+            
+            // Новый метод для получения данных об объектах для XLSX
+            toObjectsArray() {
+                return this.cells.map(row => 
+                    row.map(cell => cell.hasObject ? 1 : 0)
+                );
             }
             
             setZoom(level) {
@@ -615,13 +674,19 @@
                         this.grid.isShiftPressed = false;
                     });
 
+                    // Улучшенное сохранение в JPG
                     document.getElementById('saveJpg').addEventListener('click', () => {
                         try {
-                            const dataURL = this.canvas.toDataURL('image/jpeg');
+                            // Создаем чистое изображение без сетки
+                            const exportCanvas = this.grid.createExportImage();
+                            
+                            // Получаем данные и скачиваем
+                            const dataURL = exportCanvas.toDataURL('image/jpeg', 0.95);
                             const link = document.createElement('a');
                             link.href = dataURL;
                             link.download = 'dungeon_map.jpg';
                             link.click();
+                            
                             this.showAlert('Карта сохранена как JPG', 'success');
                         } catch (err) {
                             console.error('Error saving as JPG:', err);
@@ -629,11 +694,26 @@
                         }
                     });
 
+                    // Улучшенное сохранение в XLSX
                     document.getElementById('saveXlsx').addEventListener('click', () => {
                         try {
                             const wb = XLSX.utils.book_new();
-                            const ws = XLSX.utils.aoa_to_sheet(this.grid.toArray());
-                            XLSX.utils.book_append_sheet(wb, ws, 'DungeonMap');
+                            
+                            // Создаем первый лист с общей информацией
+                            const mainData = this.grid.toArray();
+                            const wsMain = XLSX.utils.aoa_to_sheet(mainData);
+                            XLSX.utils.book_append_sheet(wb, wsMain, 'Карта');
+                            
+                            // Создаем второй лист с бинарной информацией (заполненные ячейки)
+                            const binaryData = this.grid.toBinaryArray();
+                            const wsBinary = XLSX.utils.aoa_to_sheet(binaryData);
+                            XLSX.utils.book_append_sheet(wb, wsBinary, 'Заполненные ячейки');
+                            
+                            // Создаем третий лист с информацией об объектах
+                            const objectsData = this.grid.toObjectsArray();
+                            const wsObjects = XLSX.utils.aoa_to_sheet(objectsData);
+                            XLSX.utils.book_append_sheet(wb, wsObjects, 'Объекты');
+                            
                             XLSX.writeFile(wb, 'dungeon_map.xlsx');
                             this.showAlert('Карта сохранена как XLSX', 'success');
                         } catch (err) {
@@ -695,4 +775,3 @@
         }
     </script>
 </body>
-</html>
