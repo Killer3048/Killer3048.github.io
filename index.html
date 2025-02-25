@@ -317,7 +317,7 @@
 
         <div class="zoom-controls">
             <button id="zoomOut">−</button>
-            <div class="zoom-level" id="zoomLevel">100%</div>
+            <div class="zoom-level" id="zoomLevel">50%</div>
             <button id="zoomIn">+</button>
         </div>
 
@@ -485,8 +485,8 @@
                 this.baseRows = baseRows;
                 this.baseCols = baseCols;
                 this.baseCellSize = baseCellSize;
-                this.zoomLevel = 1;
-                this.cellSize = baseCellSize;
+                this.zoomLevel = 0.5; // Изменено на 0.5 для 50% масштаба по умолчанию
+                this.cellSize = baseCellSize * this.zoomLevel; // Учитываем масштаб при расчете cellSize
                 this.cells = this.initializeCells();
                 this.isMouseDown = false;
                 this.currentMode = 'draw';
@@ -839,6 +839,7 @@
                 this.updateModeIndicator();
                 this.grid.drawCoordinates = true;
                 this.grid.draw();
+                this.updateZoomLevel(50); // Устанавливаем начальный зум 50%
             }
 
             showAlert(message, type = 'info', duration = 3000) {
