@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Интерактивная карта подземелья.</title>
+    <title>Интерактивная карта подземелья (Цвет и Перемещение)</title>
     <style>
-        /* Стили CSS остаются без изменений */
+        /* Стили CSS остаются без изменений из предыдущего ответа */
         * {
             margin: 0;
             padding: 0;
@@ -15,38 +15,95 @@
 
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f5f5f5;
-            color: #333;
+            background-color: #f0f2f5;
+            color: #343a40;
             line-height: 1.6;
         }
 
         .container {
             max-width: 1200px;
-            margin: 0 auto;
+            margin: 20px auto;
             padding: 20px;
+            background-color: #fff;
+            border-radius: 8px;
+            box-shadow: 0 0 15px rgba(0, 0, 0, 0.1);
         }
 
         h1 {
             text-align: center;
+            margin-bottom: 25px;
+            color: #343a40;
+            font-size: 2.5rem;
+        }
+
+        .toolbar {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
             margin-bottom: 20px;
-            color: #2c3e50;
-            font-size: 2.2rem;
+        }
+
+        .toolbar button {
+            padding: 10px 15px;
+            font-size: 1rem;
+            border-radius: 5px;
+            border: 1px solid #ced4da;
+            background-color: #fff;
+            color: #495057;
+            cursor: pointer;
+            transition: background-color 0.3s, color 0.3s, border-color 0.3s;
+        }
+
+        .toolbar button.active {
+            background-color: #007bff;
+            color: white;
+            border-color: #007bff;
+        }
+
+        .toolbar button:hover {
+            background-color: #e9ecef;
+        }
+
+        .color-palette {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+
+        .color-button {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            border: 2px solid #fff;
+            cursor: pointer;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+            transition: border-color 0.3s;
+        }
+
+        .color-button.active-color {
+            border-color: #000; /* Черная рамка для активного цвета */
+        }
+
+        .color-button:hover {
+            border-color: #ccc;
         }
 
         .dungeon-wrapper {
             display: flex;
             justify-content: center;
             margin-bottom: 20px;
-            border: 1px solid #ddd;
+            border: 1px solid #ced4da;
             border-radius: 8px;
             background-color: #fff;
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05);
             overflow: hidden;
         }
 
         canvas {
             background-color: #fff;
-            cursor: crosshair; /* Изменим курсор, чтобы было понятно, что можно рисовать */
+            cursor: crosshair;
+            border-radius: inherit;
         }
 
         .controls {
@@ -57,39 +114,40 @@
         button {
             padding: 12px 25px;
             margin: 5px;
-            font-size: 16px;
+            font-size: 1rem;
             cursor: pointer;
-            background-color: #3498db;
+            background-color: #007bff;
             color: white;
             border: none;
             border-radius: 5px;
-            transition: all 0.3s ease;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+            transition: background-color 0.3s, transform 0.2s;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.15);
         }
 
         button:hover {
-            background-color: #2980b9;
+            background-color: #0056b3;
             transform: translateY(-2px);
         }
 
         button:active {
             transform: translateY(0);
+            background-color: #004085;
         }
 
         #saveJpg {
-            background-color: #e74c3c;
+            background-color: #dc3545;
         }
 
         #saveJpg:hover {
-            background-color: #c0392b;
+            background-color: #c82333;
         }
 
         #saveXlsx {
-            background-color: #27ae60;
+            background-color: #28a745;
         }
 
         #saveXlsx:hover {
-            background-color: #219653;
+            background-color: #1e7e34;
         }
 
         .mode-indicator {
@@ -98,37 +156,37 @@
             margin: 10px;
             background-color: #f8f9fa;
             border-radius: 5px;
-            border: 1px solid #ddd;
+            border: 1px solid #ced4da;
             font-weight: bold;
         }
 
         .current-mode {
             font-weight: bold;
-            color: #3498db;
+            color: #007bff;
         }
 
         .instructions {
-            margin-top: 20px;
-            padding: 20px;
+            margin-top: 25px;
+            padding: 25px;
             background-color: #f8f9fa;
-            border: 1px solid #ddd;
+            border: 1px solid #ced4da;
             border-radius: 8px;
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.08);
         }
 
         .instructions h2 {
             margin-bottom: 15px;
-            color: #2c3e50;
-            border-bottom: 2px solid #eee;
+            color: #343a40;
+            border-bottom: 2px solid #dee2e6;
             padding-bottom: 10px;
         }
 
         kbd {
-            background-color: #f1f1f1;
-            border: 1px solid #ccc;
+            background-color: #e9ecef;
+            border: 1px solid #ced4da;
             border-radius: 3px;
-            box-shadow: 0 1px 1px rgba(0, 0, 0, 0.2);
-            padding: 2px 6px;
+            box-shadow: inset 0 1px 1px rgba(0, 0, 0, 0.1);
+            padding: 3px 8px;
             font-size: 0.9em;
         }
 
@@ -143,12 +201,12 @@
             padding: 15px 20px;
             margin-bottom: 10px;
             border-radius: 5px;
-            background-color: #3498db;
+            background-color: #007bff;
             color: white;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 3px 8px rgba(0, 0, 0, 0.2);
             opacity: 0;
             transform: translateX(50px);
-            transition: all 0.3s ease;
+            transition: all 0.4s ease;
         }
 
         .alert.show {
@@ -157,89 +215,83 @@
         }
 
         .alert.info {
-            background-color: #3498db;
+            background-color: #007bff;
         }
 
         .alert.success {
-            background-color: #2ecc71;
+            background-color: #28a745;
         }
 
         .alert.warning {
-            background-color: #f39c12;
+            background-color: #ffc107;
+            color: #343a40;
         }
 
-        .zoom-controls {
+        .zoom-controls, .text-annotation-controls {
             display: flex;
             justify-content: center;
-            margin-bottom: 10px;
+            margin-bottom: 15px;
         }
 
         .zoom-controls button {
-            padding: 8px 15px;
+            padding: 10px 18px;
             margin: 0 5px;
             width: auto;
         }
 
         .zoom-level {
             display: inline-block;
-            padding: 8px 16px;
+            padding: 10px 18px;
             background-color: #f8f9fa;
             border-radius: 5px;
-            border: 1px solid #ddd;
+            border: 1px solid #ced4da;
             font-weight: bold;
             min-width: 80px;
             text-align: center;
         }
 
-        .text-annotation-controls {
-            display: flex;
-            justify-content: center;
-            margin-bottom: 10px;
-        }
-
         .text-annotation-controls input[type="text"] {
-            padding: 8px;
-            margin-right: 5px;
+            padding: 10px;
+            margin-right: 10px;
             border-radius: 5px;
-            border: 1px solid #ddd;
+            border: 1px solid #ced4da;
         }
 
         .text-annotation-controls button {
-            padding: 8px 15px;
+            padding: 10px 18px;
         }
 
         @media (max-width: 768px) {
             .container {
-                padding: 10px;
+                padding: 15px;
+                margin: 10px auto;
             }
 
             h1 {
-                font-size: 1.8rem;
+                font-size: 2rem;
+                margin-bottom: 20px;
             }
 
-            button {
-                padding: 10px 15px;
-                font-size: 14px;
-                width: 80%;
-                margin: 5px auto;
+            button, .toolbar button, .zoom-controls button, .text-annotation-controls button {
+                padding: 8px 15px;
+                font-size: 0.9rem;
+                width: auto;
+                margin: 5px;
+                display: inline-block;
+            }
+             .text-annotation-controls input[type="text"] {
+                width: calc(100% - 120px);
+                margin-bottom: 10px;
+                margin-right: 0;
                 display: block;
+                margin-left: auto;
+                margin-right: auto;
             }
 
             .instructions {
                 font-size: 0.9rem;
-            }
-
-            .zoom-controls button, .text-annotation-controls button {
-                width: auto;
-                display: inline-block;
-            }
-            .text-annotation-controls input[type="text"] {
-                width: calc(70% - 65px); /* Adjust width for smaller screens */
-                margin-bottom: 5px; /* Add some space below input on smaller screens */
-                margin-right: 0; /* Remove right margin on smaller screens */
-                display: block; /* Make input take full width available */
-                margin-left: auto;
-                margin-right: auto;
+                padding: 15px;
+                margin-top: 15px;
             }
         }
     </style>
@@ -247,7 +299,21 @@
 <body>
     <div class="container">
         <h1>Интерактивная карта подземелья</h1>
-        <h1>(Переключитесь на английский, чтобы горячие клавиши работали правильно)</h1>
+        <p>(Переключите на английский язык, чтобы горячие клавиши работали)</p>
+
+        <div class="toolbar">
+            <button id="modeDraw" class="active">Рисовать</button>
+            <button id="modeText">Текст</button>
+            <button id="modePan">Перемещать</button>
+            <button id="modeErase">Стереть</button>
+        </div>
+
+        <div class="color-palette">
+            <div class="color-button active-color" style="background-color: #2c3e50;" data-color="#2c3e50" id="colorBlack"></div>
+            <div class="color-button" style="background-color: #3498db;" data-color="#3498db" id="colorBlue"></div>
+            <div class="color-button" style="background-color: #2ecc71;" data-color="#2ecc71" id="colorGreen"></div>
+            <div class="color-button" style="background-color: #e74c3c;" data-color="#e74c3c" id="colorRed"></div>
+        </div>
 
         <div class="zoom-controls">
             <button id="zoomOut">−</button>
@@ -279,19 +345,17 @@
         <div class="instructions">
             <h2>Как работать с картой</h2>
             <p><strong>XLSX не работает!</strong></p>
-            <p><strong>Закрашивание ячеек:</strong> Кликните левой кнопкой мыши на ячейку, чтобы закрасить её. Удерживайте левую кнопку мыши и перемещайте курсор, чтобы закрашивать несколько ячеек подряд.</p>
-            <p><strong>Удаление закрашивания:</strong> Удерживайте клавишу <kbd>Shift</kbd> и кликайте на закрашенные ячейки, чтобы удалить закрашивание. Или удерживайте <kbd>Shift</kbd> и перемещайте курсор с зажатой левой кнопкой мыши для удаления сразу нескольких ячеек.</p>
-            <p><strong>Перемещение карты:</strong> Удерживайте правую кнопку мыши и перемещайте курсор, чтобы перемещать карту.</p>
-            <p><strong>Центрирование карты:</strong> Нажмите кнопку "Центрировать карту", чтобы сбросить масштаб до 100% и переместить карту в центральное положение.</p>
-            <p><strong>Добавление объектов:</strong> Нажмите <kbd>O</kbd>, чтобы включить режим добавления объектов. Кликните на ячейку, чтобы добавить объект (красную метку). Нажмите <kbd>Esc</kbd>, чтобы выйти из этого режима.</p>
-            <p><strong>Добавление текста:</strong> Введите текст в поле ввода и нажмите кнопку "Добавить текст". Затем кликните на ячейку, чтобы добавить текст к ней.</p>
-            <p><strong>Изменение масштаба:</strong> Используйте кнопки + и - над картой для увеличения или уменьшения масштаба. Также можно использовать клавиши <kbd>+</kbd> и <kbd>-</kbd>.</p>
-            <p><strong>Сохранение и загрузка карты:</strong> Используйте кнопки "Сохранить карту" и "Загрузить карту" для сохранения и загрузки состояния карты в файл JSON.</p>
+            <p><strong>Выбор режима:</strong> Используйте кнопки на панели инструментов для выбора режима: Рисование, Текст, Перемещение, Стереть.</p>
+            <p><strong>Рисование:</strong> В режиме "Рисовать" выберите цвет из палитры и кликните и перетащите левую кнопку мыши для закрашивания ячеек выбранным цветом.</p>
+            <p><strong>Стирание:</strong> В режиме "Стереть" кликните и перетащите левую кнопку мыши для очистки ячеек.</p>
+            <p><strong>Перемещение карты:</strong> В режиме "Перемещать" удерживайте правую кнопку мыши и перемещайте курсор для перемещения карты.</p>
+            <p><strong>Добавление текста:</strong> В режиме "Текст" введите текст в поле ввода и нажмите "Добавить текст". Затем кликните на ячейку, чтобы добавить текст.</p>
+            <p><strong>Масштабирование:</strong> Используйте кнопки + и - или колесико мыши для изменения масштаба. Кнопка "Центрировать карту" возвращает масштаб 100% и центрирует карту.</p>
+            <p><strong>Сохранение и загрузка:</strong> Используйте кнопки "Сохранить карту" и "Загрузить карту" для сохранения и загрузки состояния карты (JSON). Кнопки "Сохранить как JPG" и "Сохранить как XLSX" позволяют экспортировать карту в изображения и данные (XLSX не реализован).</p>
+            <p><strong>Сброс:</strong> Кнопка "Сбросить карту" очищает карту до начального состояния.</p>
             <p><strong>Горячие клавиши:</strong></p>
             <ul>
-                <li><kbd>Shift</kbd> + клик: Удалить закрашивание ячейки.</li>
-                <li><kbd>O</kbd>: Включить/выключить режим добавления объектов.</li>
-                <li><kbd>Esc</kbd>: Выключить режим добавления объектов.</li>
+                <li><kbd>Esc</kbd>: Выйти из режима текста и вернуться в режим рисования.</li>
                 <li><kbd>R</kbd>: Сбросить карту.</li>
                 <li><kbd>+</kbd>: Увеличить масштаб.</li>
                 <li><kbd>-</kbd>: Уменьшить масштаб.</li>
@@ -309,7 +373,7 @@
                 this.x = x;
                 this.y = y;
                 this.size = size;
-                this.isFilled = false;
+                this.fillColor = null;
                 this.hasObject = false;
                 this.text = null;
                 this.row = row;
@@ -321,8 +385,8 @@
                 const drawY = this.y * zoomLevel + panY;
                 const drawSize = this.size * zoomLevel;
 
-                if (this.isFilled) {
-                    ctx.fillStyle = '#2c3e50';
+                if (this.fillColor) {
+                    ctx.fillStyle = this.fillColor;
                     ctx.fillRect(drawX, drawY, drawSize, drawSize);
                 }
 
@@ -334,7 +398,7 @@
                 }
 
                 if (this.text) {
-                    ctx.fillStyle = '#ffffff';
+                    ctx.fillStyle = '#000'; // Цвет текста по умолчанию черный
                     ctx.font = `${Math.max(8, drawSize / 3)}px sans-serif`;
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
@@ -342,12 +406,14 @@
                 }
 
                 if (drawGridLines) {
-                    ctx.strokeStyle = '#ddd';
+                    ctx.strokeStyle = '#ced4da';
+                    ctx.lineWidth = 0.5;
                     ctx.strokeRect(drawX, drawY, drawSize, drawSize);
+                    ctx.lineWidth = 1;
                 }
 
                 if (drawCoordinates) {
-                    ctx.fillStyle = '#999';
+                    ctx.fillStyle = '#6c757d';
                     ctx.font = `${Math.max(6, 8 * zoomLevel)}px sans-serif`;
                     ctx.textAlign = 'left';
                     ctx.textBaseline = 'top';
@@ -357,13 +423,14 @@
 
 
             drawForExport(ctx) {
-                if (this.isFilled) {
-                    ctx.fillStyle = '#2c3e50';
+                if (this.fillColor) {
+                    ctx.fillStyle = this.fillColor;
                     ctx.fillRect(this.x, this.y, this.size, this.size);
                 } else {
                     ctx.fillStyle = '#ffffff';
                     ctx.fillRect(this.x, this.y, this.size, this.size);
                 }
+
 
                 if (this.hasObject) {
                     ctx.fillStyle = '#e74c3c';
@@ -372,7 +439,7 @@
                     ctx.fill();
                 }
                 if (this.text) {
-                    ctx.fillStyle = '#ffffff';
+                    ctx.fillStyle = '#000'; // Цвет текста по умолчанию черный
                     ctx.font = `${Math.max(8, this.size / 3)}px sans-serif`;
                     ctx.textAlign = 'center';
                     ctx.textBaseline = 'middle';
@@ -380,9 +447,11 @@
                 }
             }
 
-            toggleFill() {
-                this.isFilled = !this.isFilled;
+
+            setFilled(filled) {
+                this.fillColor = filled;
             }
+
 
             setObject(hasObject) {
                 this.hasObject = hasObject;
@@ -391,6 +460,13 @@
             setText(text) {
                 this.text = text;
             }
+
+            clear() {
+                this.fillColor = null;
+                this.hasObject = false;
+                this.text = null;
+            }
+
 
             containsPoint(px, py, panX, panY, zoomLevel) {
                 const drawSize = this.size * zoomLevel;
@@ -412,9 +488,7 @@
                 this.cellSize = baseCellSize;
                 this.cells = this.initializeCells();
                 this.isMouseDown = false;
-                this.isShiftPressed = false;
-                this.isObjectMode = false;
-                this.isTextAnnotationMode = false;
+                this.currentMode = 'draw';
                 this.annotationText = null;
                 this.showAlert = null;
                 this.drawGridLines = true;
@@ -424,6 +498,7 @@
                 this.isPanning = false;
                 this.panStartX = 0;
                 this.panStartY = 0;
+                this.selectedColor = '#2c3e50';
                 this.setupCanvas();
             }
 
@@ -471,7 +546,7 @@
             }
 
             drawAxisCoordinates() {
-                this.ctx.fillStyle = '#666';
+                this.ctx.fillStyle = '#6c757d';
                 this.ctx.font = '10px sans-serif';
                 this.ctx.textAlign = 'center';
                 this.ctx.textBaseline = 'bottom';
@@ -515,15 +590,15 @@
                 return exportCanvas;
             }
 
-            handleMouseDown(x, y, shiftKey, button) {
-                if (button === 2) {
+            handleMouseDown(x, y, button) {
+                this.isMouseDown = true;
+                if (button === 2 && this.currentMode !== 'text') {
+                    this.setMode('pan');
                     this.isPanning = true;
                     this.panStartX = x;
                     this.panStartY = y;
                     this.canvas.style.cursor = 'grab';
                 } else {
-                    this.isMouseDown = true;
-                    this.isShiftPressed = shiftKey;
                     this.handleInteraction(x, y);
                 }
             }
@@ -543,12 +618,12 @@
             }
 
             handleMouseUp(button) {
-                if (button === 2) {
+                if (button === 2 && this.currentMode === 'pan') {
                     this.isPanning = false;
                     this.canvas.style.cursor = 'crosshair';
-                } else {
-                    this.isMouseDown = false;
+                    this.setMode('draw');
                 }
+                this.isMouseDown = false;
             }
 
 
@@ -571,42 +646,29 @@
                         for (let j = 0; j < this.baseCols; j++) {
                             if (this.cells[i][j].containsPoint(clickX, clickY, this.panX, this.panY, this.zoomLevel)) {
                                 cellFound = true;
-                                if (this.isObjectMode) {
-                                    const hadObject = this.cells[i][j].hasObject;
-                                    this.cells[i][j].setObject(!hadObject);
-                                    if (!hadObject && this.showAlert) {
-                                        this.showAlert('Объект добавлен', 'success');
-                                    } else if (hadObject && this.showAlert) {
-                                        this.showAlert('Объект удален', 'info');
-                                    }
-                                } else if (this.isTextAnnotationMode && this.annotationText) {
-                                    this.cells[i][j].setText(this.annotationText);
-                                    this.isTextAnnotationMode = false;
-                                    this.annotationText = null;
-                                    if (this.showAlert) {
-                                        this.showAlert('Текст добавлен', 'success');
-                                    }
-                                } else if (this.isShiftPressed) {
-                                    const wasFilled = this.cells[i][j].isFilled;
-                                    this.cells[i][j].isFilled = false;
-                                    this.cells[i][j].setText(null);
-                                    if (wasFilled && this.showAlert) {
-                                        this.showAlert('Ячейка очищена', 'info');
-                                    }
-                                } else {
-                                    const wasFilled = this.cells[i][j].isFilled;
-                                    this.cells[i][j].isFilled = true;
-                                    if (!wasFilled && !this.isMouseDown && this.showAlert) {
-                                        this.showAlert('Ячейка закрашена', 'info');
-                                    }
+                                const cell = this.cells[i][j];
+                                switch (this.currentMode) {
+                                    case 'draw':
+                                        cell.setFilled(this.selectedColor);
+                                        break;
+                                    case 'erase':
+                                        cell.clear();
+                                        break;
+                                    case 'text':
+                                        if (this.annotationText) {
+                                            cell.setText(this.annotationText);
+                                            this.annotationText = null;
+                                            this.setMode('draw');
+                                        }
+                                        break;
                                 }
                                 break;
                             }
                         }
                         if (cellFound) break;
                     }
-
                     this.draw();
+
                 } catch (err) {
                     console.error('Ошибка при взаимодействии с картой:', err);
                     if (this.showAlert) {
@@ -615,25 +677,37 @@
                 }
             }
 
-            toggleObjectMode() {
-                this.isObjectMode = !this.isObjectMode;
-                this.isTextAnnotationMode = false;
+            setMode(mode) {
+                this.currentMode = mode;
+                document.querySelectorAll('.toolbar button').forEach(btn => btn.classList.remove('active'));
+                document.getElementById(`mode${mode.charAt(0).toUpperCase() + mode.slice(1)}`).classList.add('active');
+                this.canvas.style.cursor = mode === 'pan' ? 'grab' : 'crosshair';
+                this.updateModeIndicator(); // Ensure mode indicator is updated
+
                 if (this.showAlert) {
-                    if (this.isObjectMode) {
-                        this.showAlert('Режим добавления объектов активирован', 'info');
-                    } else {
-                        this.showAlert('Режим рисования активирован', 'info');
-                    }
+                    this.showAlert(`Режим: ${mode.charAt(0).toUpperCase() + mode.slice(1)}`, 'info');
                 }
-                return this.isObjectMode;
             }
 
-            enableTextAnnotationMode(text) {
-                this.isTextAnnotationMode = true;
-                this.isObjectMode = false;
-                this.annotationText = text;
+            updateModeIndicator() { // Added updateModeIndicator to Grid class
+                let modeText;
+                switch (this.currentMode) {
+                    case 'draw': modeText = 'Рисование'; break;
+                    case 'text': modeText = 'Текст'; break;
+                    case 'pan': modeText = 'Перемещение'; break;
+                    case 'erase': modeText = 'Стирание'; break;
+                    default: modeText = 'Рисование';
+                }
+                document.getElementById('currentMode').textContent = modeText;
+            }
+
+
+            setSelectedColor(color) {
+                this.selectedColor = color;
+                document.querySelectorAll('.color-button').forEach(btn => btn.classList.remove('active-color'));
+                document.querySelector(`.color-button[data-color="${color}"]`).classList.add('active-color');
                 if (this.showAlert) {
-                    this.showAlert('Режим добавления текста активирован', 'info');
+                    this.showAlert(`Цвет выбран: ${color}`, 'info');
                 }
             }
 
@@ -665,7 +739,7 @@
                 return this.cells.map(row =>
                     row.map(cell => {
                         let cellCode = '';
-                        if (cell.isFilled) cellCode += 'F';
+                        if (cell.fillColor) cellCode += 'C';
                         if (cell.hasObject) cellCode += 'O';
                         if (cell.text) cellCode += 'T';
                         return cellCode;
@@ -675,7 +749,7 @@
 
             toBinaryArray() {
                 return this.cells.map(row =>
-                    row.map(cell => cell.isFilled ? 1 : 0)
+                    row.map(cell => cell.fillColor ? 1 : 0)
                 );
             }
 
@@ -687,7 +761,7 @@
 
             getState() {
                 return this.cells.map(row => row.map(cell => ({
-                    isFilled: cell.isFilled,
+                    fillColor: cell.fillColor,
                     hasObject: cell.hasObject,
                     text: cell.text
                 })));
@@ -700,7 +774,7 @@
 
                 for (let i = 0; i < rows; i++) {
                     for (let j = 0; j < cols; j++) {
-                        this.cells[i][j].isFilled = state[i][j].isFilled;
+                        this.cells[i][j].fillColor = state[i][j].fillColor;
                         this.cells[i][j].hasObject = state[i][j].hasObject;
                         this.cells[i][j].text = state[i][j].text;
                     }
@@ -709,7 +783,7 @@
             }
 
 
-            setZoom(level) {
+             setZoom(level) {
                 if (level < 0.1) level = 0.1;
                 if (level > 4) level = 4;
 
@@ -717,17 +791,14 @@
                 this.zoomLevel = level;
                 this.cellSize = this.baseCellSize * level;
 
-                // Calculate canvas center in world coordinates *before* zoom
                 const centerXBeforeZoom = (this.canvas.width / 2 - this.panX) / previousZoomLevel;
                 const centerYBeforeZoom = (this.canvas.height / 2 - this.panY) / previousZoomLevel;
 
-                this.setupCanvas(); // Setup canvas *after* changing zoom level and cell size
+                this.setupCanvas();
 
-                // Calculate canvas center in world coordinates *after* zoom
-                const centerXAfterZoom = centerXBeforeZoom; // Center should remain the same in world coords
+                const centerXAfterZoom = centerXBeforeZoom;
                 const centerYAfterZoom = centerYBeforeZoom;
 
-                // Calculate required pan adjustment to keep center fixed
                 this.panX = this.canvas.width / 2 - centerXAfterZoom * this.zoomLevel;
                 this.panY = this.canvas.height / 2 - centerYAfterZoom * this.zoomLevel;
 
@@ -764,11 +835,13 @@
                 this.grid.showAlert = this.showAlert.bind(this);
 
                 this.initializeEventListeners();
+                this.updateModeIndicator();
                 this.grid.drawCoordinates = true;
                 this.grid.draw();
             }
 
             showAlert(message, type = 'info', duration = 3000) {
+                this.grid.updateModeIndicator(); // Call this here to update mode on alerts
                 const alert = document.createElement('div');
                 alert.className = `alert ${type}`;
                 alert.textContent = message;
@@ -789,11 +862,13 @@
 
             updateModeIndicator() {
                 if (this.currentModeElement) {
-                    let modeText = 'Рисование';
-                    if (this.grid.isObjectMode) {
-                        modeText = 'Добавление объектов';
-                    } else if (this.grid.isTextAnnotationMode) {
-                        modeText = 'Добавление текста';
+                    let modeText;
+                    switch (this.grid.currentMode) {
+                        case 'draw': modeText = 'Рисование'; break;
+                        case 'text': modeText = 'Текст'; break;
+                        case 'pan': modeText = 'Перемещение'; break;
+                        case 'erase': modeText = 'Стирание'; break;
+                        default: modeText = 'Рисование';
                     }
                     this.currentModeElement.textContent = modeText;
                 }
@@ -855,7 +930,7 @@
                     this.canvas.addEventListener('mousedown', (e) => {
                         e.preventDefault();
                         this.canvas.focus();
-                        this.grid.handleMouseDown(e.clientX, e.clientY, e.shiftKey, e.button);
+                        this.grid.handleMouseDown(e.clientX, e.clientY, e.button);
                     });
 
                     this.canvas.addEventListener('mousemove', (e) => {
@@ -869,7 +944,7 @@
                     this.canvas.addEventListener('touchstart', (e) => {
                         e.preventDefault();
                         const touch = e.touches[0];
-                        this.grid.handleMouseDown(touch.clientX, touch.clientY, false, 0);
+                        this.grid.handleMouseDown(touch.clientX, touch.clientY, 0);
                     });
 
                     this.canvas.addEventListener('touchmove', (e) => {
@@ -883,20 +958,10 @@
 
                     document.addEventListener('keydown', (e) => {
                         if (e.target !== this.annotationTextInput) {
-                            if (e.key === 'o' || e.key === 'O' || e.key === 'о' || e.key === 'О') {
-                                const isObjectMode = this.grid.toggleObjectMode();
-                                this.updateModeIndicator();
-                            } else if (e.key === 'Escape') {
-                                if (this.grid.isObjectMode || this.grid.isTextAnnotationMode) {
-                                    this.grid.isObjectMode = false;
-                                    this.grid.isTextAnnotationMode = false;
-                                    this.updateModeIndicator();
-                                    this.showAlert('Режим рисования активирован', 'info');
-                                }
+                            if (e.key === 'Escape') {
+                                this.grid.setMode('draw');
                             } else if (e.key === 'r' || e.key === 'R' || e.key === 'к' || e.key === 'К') {
                                 this.grid.reset();
-                            } else if (e.key === 'Shift') {
-                                this.grid.isShiftPressed = true;
                             } else if (e.key === '+' || e.key === '=') {
                                 const level = this.grid.zoomIn();
                                 this.updateZoomLevel(level);
@@ -909,15 +974,9 @@
                         }
                     });
 
-                    document.addEventListener('keyup', (e) => {
-                        if (e.key === 'Shift') {
-                            this.grid.isShiftPressed = false;
-                        }
-                    });
 
                     window.addEventListener('blur', () => {
                         this.grid.isMouseDown = false;
-                        this.grid.isShiftPressed = false;
                         this.grid.isPanning = false;
                         this.canvas.style.cursor = 'crosshair';
                     });
@@ -997,9 +1056,10 @@
                     }, { passive: false });
 
                     this.canvas.addEventListener('contextmenu', (e) => {
-                        e.preventDefault();
-                        return false;
+                        e.preventDefault(); // Prevent default context menu
+                        return false; //  Still needed for some browsers to fully disable menu.
                     });
+
 
                     window.addEventListener('resize', () => {
                         this.grid.setupCanvas();
@@ -1009,7 +1069,8 @@
                     document.getElementById('addAnnotation').addEventListener('click', () => {
                         const text = this.annotationTextInput.value;
                         if (text) {
-                            this.grid.enableTextAnnotationMode(text);
+                            this.grid.annotationText = text;
+                            this.grid.setMode('text');
                             this.updateModeIndicator();
                         } else {
                             this.showAlert('Введите текст аннотации', 'warning');
@@ -1028,13 +1089,27 @@
                         this.handleFileLoad(e);
                     });
 
+                    document.getElementById('modeDraw').addEventListener('click', () => this.grid.setMode('draw'));
+                    document.getElementById('modeText').addEventListener('click', () => this.grid.setMode('text'));
+                    document.getElementById('modePan').addEventListener('click', () => this.grid.setMode('pan'));
+                    document.getElementById('modeErase').addEventListener('click', () => this.grid.setMode('erase'));
+
+                    document.querySelectorAll('.color-button').forEach(button => {
+                        button.addEventListener('click', (e) => {
+                            this.grid.setSelectedColor(e.target.dataset.color);
+                        });
+                    });
+
 
                 } catch (err) {
                     console.error('Error initializing event listeners:', err);
                     this.showAlert('Ошибка при инициализации приложения', 'warning');
                 }
             }
+
+
         }
+
 
         try {
             document.addEventListener('DOMContentLoaded', () => {
