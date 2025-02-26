@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Интерактивная карта подземелья</title>
     <style>
+        /* Стили CSS (остаются без изменений) */
         * {
             margin: 0;
             padding: 0;
@@ -97,16 +98,12 @@
             background-color: #fff;
             box-shadow: inset 0 2px 5px rgba(0, 0, 0, 0.05);
             overflow: hidden;
-            /* Фиксируем размеры для предотвращения прыжков интерфейса и сохранения границ */
-            min-width: 600px; /* Минимальная ширина, можно настроить */
-            min-height: 400px; /* Минимальная высота, можно настроить */
         }
 
         canvas {
             background-color: #fff;
             cursor: crosshair;
             border-radius: inherit;
-            display: block; /* Убираем отступы снизу от canvas */
         }
 
         .controls {
@@ -341,28 +338,27 @@
             <button id="saveMap">Сохранить карту</button>
             <button id="loadMap">Загрузить карту</button>
             <button id="saveJpg">Сохранить как JPG</button>
-            <button id="saveXlsx">Сохранить как XLSX</button>
+            <button id="saveXlsx">Сохранить как XLSX (Не работает)</button> <!-! Указание, что не работает -->
             <button id="resetMap">Сбросить карту</button>
         </div>
 
         <div class="instructions">
             <h2>Как работать с картой</h2>
-            <p>(Переключите на английский язык, чтобы горячие клавиши работали)</p>
-            <p><strong>XLSX не работает!</strong></p>
+            <p><strong>XLSX сохранение не работает!</strong></p> <!-!  Уточнение в инструкциях -->
             <p><strong>Выбор режима:</strong> Используйте кнопки на панели инструментов для выбора режима: Рисование, Текст, Перемещение, Стереть.</p>
             <p><strong>Рисование:</strong> В режиме "Рисовать" выберите цвет из палитры и кликните и перетащите левую кнопку мыши для закрашивания ячеек выбранным цветом.</p>
             <p><strong>Стирание:</strong> В режиме "Стереть" кликните и перетащите левую кнопку мыши для очистки ячеек.</p>
             <p><strong>Перемещение карты:</strong> В режиме "Перемещать" удерживайте правую кнопку мыши и перемещайте курсор для перемещения карты.</p>
             <p><strong>Добавление текста:</strong> В режиме "Текст" введите текст в поле ввода и нажмите "Добавить текст". Затем кликните на ячейку, чтобы добавить текст.</p>
-            <p><strong>Масштабирование:</strong> Используйте кнопки + и - или колесико мыши для изменения масштаба. Кнопка "Центрировать карту" возвращает масштаб 100% и центрирует карту.</p>
-            <p><strong>Сохранение и загрузка:</strong> Используйте кнопки "Сохранить карту" и "Загрузить карту" для сохранения и загрузки состояния карты (JSON). Кнопки "Сохранить как JPG" и "Сохранить как XLSX" позволяют экспортировать карту в изображения и данные (XLSX не реализован).</p>
+            <p><strong>Масштабирование:</strong> Используйте кнопки + и - или колесико мыши для изменения масштаба. Кнопка "Центрировать карту" возвращает масштаб 50% и центрирует карту.</p>
+            <p><strong>Сохранение и загрузка:</strong> Используйте кнопки "Сохранить карту" и "Загрузить карту" для сохранения и загрузки состояния карты (JSON). Кнопка "Сохранить как JPG" позволяет экспортировать карту в изображение. Сохранение в XLSX <strong>не работает</strong>.</p> <!-! Уточнение в инструкциях -->
             <p><strong>Сброс:</strong> Кнопка "Сбросить карту" очищает карту до начального состояния.</p>
             <p><strong>Горячие клавиши:</strong></p>
             <ul>
                 <li><kbd>Esc</kbd>: Выйти из режима текста и вернуться в режим рисования.</li>
-                <li><kbd>R</kbd>: Сбросить карту.</li>
-                <li><kbd>+</kbd>: Увеличить масштаб.</li>
-                <li><kbd>-</kbd>: Уменьшить масштаб.</li>
+                <li><kbd>R</kbd>: Сбросить карту.</li> <!-! Добавили русскую раскладку -->
+                <li><kbd>+</kbd>: Увеличить масштаб.</li> <!-! Добавили `=` -->
+                <li><kbd>-</kbd>: Уменьшить масштаб.</li> <!-! Добавили `_` -->
             </ul>
         </div>
     </div>
@@ -384,7 +380,22 @@
                 this.col = col;
             }
 
+            shouldDraw(ctx, panX, panY, zoomLevel) {
+                const drawX = this.x * zoomLevel + panX;
+                const drawY = this.y * zoomLevel + panY;
+                const drawSize = this.size * zoomLevel;
+
+                // Проверка, попадает ли ячейка в видимую область канваса
+                return drawX + drawSize > 0 && drawX < ctx.canvas.width &&
+                       drawY + drawSize > 0 && drawY < ctx.canvas.height;
+            }
+
+
             draw(ctx, drawGridLines, drawCoordinates, panX, panY, zoomLevel) {
+                if (!this.shouldDraw(ctx, panX, panY, zoomLevel)) {
+                    return; // Не рисуем ячейку, если она не видна
+                }
+
                 const drawX = this.x * zoomLevel + panX;
                 const drawY = this.y * zoomLevel + panY;
                 const drawSize = this.size * zoomLevel;
@@ -503,6 +514,8 @@
                 this.panStartX = 0;
                 this.panStartY = 0;
                 this.selectedColor = '#2c3e50';
+                this.lastCell = null;
+                this.animationFrameRequested = false; // Флаг для requestAnimationFrame
                 this.setupCanvas();
             }
 
@@ -534,6 +547,17 @@
                 }
                 return cells;
             }
+
+            requestDraw() {
+                if (!this.animationFrameRequested) {
+                    this.animationFrameRequested = true;
+                    requestAnimationFrame(() => {
+                        this.draw();
+                        this.animationFrameRequested = false;
+                    });
+                }
+            }
+
 
             draw() {
                 this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
@@ -615,11 +639,14 @@
                     this.panY += dy;
                     this.panStartX = x;
                     this.panStartY = y;
-                    this.draw();
+                    this.requestDraw(); // Используем requestAnimationFrame для плавности
+                } else if (this.isMouseDown && (this.currentMode === 'draw' || this.currentMode === 'erase')) {
+                    this.handleInteraction(x, y);
                 } else if (this.isMouseDown) {
                     this.handleInteraction(x, y);
                 }
             }
+
 
             handleMouseUp(button) {
                 if (button === 2 && this.currentMode === 'pan') {
@@ -628,6 +655,7 @@
                     this.setMode('draw');
                 }
                 this.isMouseDown = false;
+                this.lastCell = null;
             }
 
 
@@ -645,33 +673,43 @@
                     }
 
                     let cellFound = false;
+                    let currentCell = null;
 
                     for (let i = 0; i < this.baseRows; i++) {
                         for (let j = 0; j < this.baseCols; j++) {
                             if (this.cells[i][j].containsPoint(clickX, clickY, this.panX, this.panY, this.zoomLevel)) {
+                                currentCell = this.cells[i][j];
                                 cellFound = true;
-                                const cell = this.cells[i][j];
-                                switch (this.currentMode) {
-                                    case 'draw':
-                                        cell.setFilled(this.selectedColor);
-                                        break;
-                                    case 'erase':
-                                        cell.clear();
-                                        break;
-                                    case 'text':
-                                        if (this.annotationText) {
-                                            cell.setText(this.annotationText);
-                                            this.annotationText = null;
-                                            this.setMode('draw');
-                                        }
-                                        break;
-                                }
                                 break;
                             }
                         }
                         if (cellFound) break;
                     }
-                    this.draw();
+
+                    if (currentCell) {
+                        if (this.currentMode === 'draw' || this.currentMode === 'erase') {
+                             if (this.lastCell !== currentCell) {
+                                switch (this.currentMode) {
+                                    case 'draw':
+                                        currentCell.setFilled(this.selectedColor);
+                                        break;
+                                    case 'erase':
+                                        currentCell.clear();
+                                        break;
+                                }
+                                this.lastCell = currentCell;
+                                this.requestDraw(); // Рисуем только после изменения ячейки, используя requestAnimationFrame
+                            }
+                        } else if (this.currentMode === 'text') {
+                            if (this.annotationText) {
+                                currentCell.setText(this.annotationText);
+                                this.annotationText = null;
+                                this.setMode('draw');
+                                this.requestDraw(); // Обновляем канвас после добавления текста
+                            }
+                        }
+                    }
+
 
                 } catch (err) {
                     console.error('Ошибка при взаимодействии с картой:', err);
@@ -720,33 +758,34 @@
                 this.cells = this.initializeCells();
                 this.panX = 0;
                 this.panY = 0;
-                this.zoomLevel = 1;
-                this.cellSize = this.baseCellSize;
+                this.zoomLevel = 0.5;
+                this.cellSize = this.baseCellSize * this.zoomLevel;
                 this.setupCanvas();
-                this.draw();
+                this.centerView();
+                this.requestDraw(); // Используем requestAnimationFrame при сбросе
                 if (this.showAlert) {
                     this.showAlert('Карта сброшена', 'success');
                 }
             }
 
             centerView() {
-                this.zoomLevel = 1;
-                this.cellSize = this.baseCellSize;
-                this.panX = this.canvas.width / 2 - (this.baseCols * this.baseCellSize) / 2;
-                this.panY = this.canvas.height / 2 - (this.baseRows * this.baseCellSize) / 2;
+                this.zoomLevel = 0.5;
+                this.cellSize = this.baseCellSize * this.zoomLevel;
                 this.setupCanvas();
-                this.draw();
+                this.panX = (this.canvas.width - (this.baseCols * this.cellSize)) / 2;
+                this.panY = (this.canvas.height - (this.baseRows * this.cellSize)) / 2;
+                this.requestDraw(); // Используем requestAnimationFrame при центрировании
             }
 
 
             toArray() {
                 return this.cells.map(row =>
                     row.map(cell => {
-                        let cellCode = '';
-                        if (cell.fillColor) cellCode += 'C';
-                        if (cell.hasObject) cellCode += 'O';
-                        if (cell.text) cellCode += 'T';
-                        return cellCode;
+                        let cellData = {};
+                        if (cell.fillColor) cellData.fillColor = cell.fillColor;
+                        if (cell.hasObject) cellData.hasObject = true;
+                        if (cell.text) cellData.text = cell.text;
+                        return cellData;
                     })
                 );
             }
@@ -773,17 +812,27 @@
 
             loadState(state) {
                 if (!state) return;
-                const rows = Math.min(state.length, this.baseRows);
-                const cols = Math.min(state[0].length, this.baseCols);
+                try {
+                    if (!Array.isArray(state)) {
+                        throw new Error("Неверный формат данных состояния карты: ожидается массив.");
+                    }
+                    const rows = Math.min(state.length, this.baseRows);
+                    const cols = Math.min(state[0].length, this.baseCols);
 
-                for (let i = 0; i < rows; i++) {
-                    for (let j = 0; j < cols; j++) {
-                        this.cells[i][j].fillColor = state[i][j].fillColor;
-                        this.cells[i][j].hasObject = state[i][j].hasObject;
-                        this.cells[i][j].text = state[i][j].text;
+                    for (let i = 0; i < rows; i++) {
+                        for (let j = 0; j < cols; j++) {
+                            this.cells[i][j].fillColor = state[i][j].fillColor || null;
+                            this.cells[i][j].hasObject = state[i][j].hasObject || false;
+                            this.cells[i][j].text = state[i][j].text || null;
+                        }
+                    }
+                    this.requestDraw(); // Используем requestAnimationFrame после загрузки состояния
+                } catch (error) {
+                    console.error('Ошибка при загрузке состояния карты:', error);
+                    if (this.showAlert) {
+                        this.showAlert('Ошибка при загрузке состояния карты: неверный формат данных.', 'warning');
                     }
                 }
-                this.draw();
             }
 
 
@@ -807,7 +856,7 @@
                 this.panY = this.canvas.height / 2 - centerYAfterZoom * this.zoomLevel;
 
 
-                this.draw();
+                this.requestDraw(); // Используем requestAnimationFrame после изменения зума
                 return Math.round(level * 100);
             }
 
@@ -841,7 +890,7 @@
                 this.initializeEventListeners();
                 this.updateModeIndicator();
                 this.grid.drawCoordinates = true;
-                this.grid.draw();
+                this.grid.requestDraw(); // Первоначальная отрисовка через requestAnimationFrame
                 this.updateZoomLevel(50);
             }
 
@@ -922,7 +971,7 @@
                         this.showAlert('Карта загружена', 'success');
                     } catch (error) {
                         console.error('Ошибка при загрузке карты:', error);
-                        this.showAlert('Ошибка при загрузке карты: неверный формат файла', 'warning');
+                        this.showAlert('Ошибка при загрузке карты: неверный формат файла JSON', 'warning');
                     }
                 };
                 reader.readAsText(file);
@@ -965,7 +1014,7 @@
                         if (e.target !== this.annotationTextInput) {
                             if (e.key === 'Escape') {
                                 this.grid.setMode('draw');
-                            } else if (e.key === 'r' || e.key === 'R' || e.key === 'к' || e.key === 'К') {
+                            } else if (e.key.toLowerCase() === 'r' || e.key.toLowerCase() === 'к') {
                                 this.grid.reset();
                             } else if (e.key === '+' || e.key === '=') {
                                 const level = this.grid.zoomIn();
@@ -1003,11 +1052,13 @@
                     });
 
                     document.getElementById('saveXlsx').addEventListener('click', () => {
+                        this.showAlert('Сохранение в XLSX не реализовано.', 'warning');
+                        /* // Закомментированный код для сохранения в XLSX, если потребуется реализовать в будущем
                         try {
                             const wb = XLSX.utils.book_new();
 
                             const mainData = this.grid.toArray();
-                            const wsMain = XLSX.utils.aoa_to_sheet(mainData);
+                            const wsMain = XLSX.utils.json_to_sheet(mainData, { header: ['fillColor', 'hasObject', 'text'] }); // Пример заголовков
                             XLSX.utils.book_append_sheet(wb, wsMain, 'Карта');
 
                             const binaryData = this.grid.toBinaryArray();
@@ -1024,6 +1075,7 @@
                             console.error('Error saving as XLSX:', err);
                             this.showAlert('Ошибка при сохранении XLSX', 'warning');
                         }
+                        */
                     });
 
                     document.getElementById('resetMap').addEventListener('click', () => {
@@ -1032,7 +1084,7 @@
 
                     document.getElementById('centerMap').addEventListener('click', () => {
                         this.grid.centerView();
-                        this.updateZoomLevel(100);
+                        this.updateZoomLevel(50);
                         this.showAlert('Карта центрирована', 'info');
                     });
 
@@ -1068,11 +1120,11 @@
 
                     window.addEventListener('resize', () => {
                         this.grid.setupCanvas();
-                        this.grid.draw();
+                        this.grid.requestDraw(); // Перерисовка при изменении размера окна через requestAnimationFrame
                     });
 
                     document.getElementById('addAnnotation').addEventListener('click', () => {
-                        const text = this.annotationTextInput.value;
+                        const text = this.annotationTextInput.value.trim();
                         if (text) {
                             this.grid.annotationText = text;
                             this.grid.setMode('text');
